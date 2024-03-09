@@ -1,4 +1,4 @@
-const { sequelize } = require("../postgres");
+const { sequelize, Op } = require("../postgres");
 const { DataTypes } = require("sequelize");
 
 const SensorData = sequelize.define(
@@ -24,5 +24,23 @@ const SensorData = sequelize.define(
     timestamps: false, // disable automatic timestamp fields
   }
 );
+
+SensorData.countSensorData = async function (filter = {}) {
+  return await this.count({ where: filter });
+};
+
+SensorData.findAllSensorData = async function (
+  where = {},
+  order = [],
+  paging = { offset: 0, limit: 10 }
+) {
+  // Fetch filtered, sorted, and paginated sensor data nodes
+  return await this.findAll({
+    where,
+    order,
+    offset: paging.offset,
+    limit: paging.limit,
+  });
+};
 
 module.exports = SensorData;

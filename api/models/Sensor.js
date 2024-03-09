@@ -1,6 +1,5 @@
 const { sequelize } = require("../postgres");
 const { DataTypes, Op } = require("sequelize");
-const SensorData = require("./SensorData");
 
 const Sensor = sequelize.define(
   "topics",
@@ -56,17 +55,7 @@ Sensor.findAllSensors = async function (
     order,
     offset: paging.offset,
     limit: paging.limit,
-    include: [
-      {
-        model: SensorData,
-        required: false,
-      },
-    ],
   });
 };
-
-Sensor.hasMany(SensorData, { foreignKey: "topic_id" });
-
-SensorData.belongsTo(Sensor, { foreignKey: "topic_id" });
 
 module.exports = Sensor;

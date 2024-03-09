@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 
 // Connect to Postgres
-const sequelize = new Sequelize("postgres://postgres@db:5432/gbt");
+const sequelize = new Sequelize("postgres://postgres@0.0.0.0:5432/gbt");
 
 const connectWithRetry = async () => {
   try {

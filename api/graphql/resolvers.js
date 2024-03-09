@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Sensor = require("../models/Sensor");
 const SensorData = require("../models/SensorData");
 const GraphQLJSON = require("graphql-type-json");
+const { Op } = require("sequelize");
 
 module.exports = {
   JSON: GraphQLJSON,
@@ -24,21 +25,86 @@ module.exports = {
     ) => {
       // Convert filter to Sequelize where clause
       const where = {};
-      if (filter.name) {
-        where.name = { [Op.iLike]: filter.name };
+      if (
+        filter.name &&
+        typeof filter.name === "object" &&
+        filter.name.iLike !== undefined
+      ) {
+        where.name = { [Op.iLike]: filter.name.iLike };
       }
 
       // Convert sorting to Sequelize order option
       const order =
-        sorting.length > 0
+        sorting.length > 0 &&
+        sorting.every(({ field, direction }) => field && direction)
           ? sorting.map(({ field, direction }) => [field, direction])
           : undefined;
 
-      // Fetch total count of sensors matching the filter
-      const totalCount = await Sensor.countSensors(where);
+      // Fetch total count of sensor data matching the filter
+      const totalCount = await Sensor.count({ where });
 
-      // Fetch filtered, sorted, and paginated sensor nodes
-      const nodes = await Sensor.findAllSensors(where, order, paging);
+      // Fetch filtered, sorted, and paginated sensor data nodes
+      const nodes = await Sensor.findAll({
+        where,
+        order,
+        offset: paging.offset,
+        limit: paging.limit,
+      });
+
+      return {
+        totalCount,
+        nodes,
+      };
+    },
+    sensorData: async (
+      _,
+      { topic_id, filter = {}, sorting = [], paging = { offset: 0, limit: 10 } }
+    ) => {
+      // Convert filter to Sequelize where clause
+
+      const where = topic_id ? { topic_id } : {};
+      if (
+        filter.topic_id &&
+        typeof filter.topic_id === "object" &&
+        filter.topic_id.in !== undefined
+      ) {
+        where.topic_id = { [Op.in]: filter.topic_id.in };
+      }
+      if (
+        filter.ts &&
+        typeof filter.ts === "object" &&
+        filter.ts.eq !== undefined
+      ) {
+        where.ts = filter.ts.eq;
+      }
+      if (
+        filter.value_string &&
+        typeof filter.value_string === "object" &&
+        filter.value_string.eq !== undefined
+      ) {
+        where.value_string = filter.value_string.eq;
+      }
+
+      // Convert sorting to Sequelize order option
+      const order =
+        sorting.length > 0 &&
+        sorting.every(({ field, direction }) => field && direction)
+          ? sorting.map(({ field, direction }) => [
+              field === "id" ? "topic_id" : field,
+              direction,
+            ])
+          : undefined;
+
+      // Fetch total count of sensor data matching the filter
+      const totalCount = await SensorData.count({ where });
+
+      // Fetch filtered, sorted, and paginated sensor data nodes
+      const nodes = await SensorData.findAll({
+        where,
+        order,
+        offset: paging.offset,
+        limit: paging.limit,
+      });
 
       return {
         totalCount,
@@ -95,11 +161,6 @@ module.exports = {
       } else {
         throw new Error("User not found or not modified");
       }
-    },
-  },
-  Sensor: {
-    data: async (sensor) => {
-      return await SensorData.findAll({ where: { topic_id: sensor.id } });
     },
   },
 };

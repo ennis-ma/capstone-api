@@ -37,7 +37,6 @@ module.exports = gql`
     id: ID!
     name: String!
     metadata: String!
-    data: [SensorData!]!
   }
 
   type SensorResponse {
@@ -60,8 +59,30 @@ module.exports = gql`
   }
 
   type SensorData {
+    topic_id: ID!
     ts: String!
     value_string: String!
+  }
+
+  type SensorDataResponse {
+    totalCount: Int!
+    nodes: [SensorData!]!
+  }
+
+  input SensorDataFilter {
+    topic_id: JSON
+    ts: JSON
+    value_string: JSON
+  }
+
+  input SensorDataSorting {
+    field: String!
+    direction: String!
+  }
+
+  input OffsetPaging {
+    offset: Int!
+    limit: Int!
   }
 
   type Query {
@@ -74,6 +95,12 @@ module.exports = gql`
       sorting: [SensorSorting]
       paging: OffsetPaging
     ): SensorResponse!
+    sensorData(
+      topic_id: ID
+      filter: SensorDataFilter
+      sorting: [SensorDataSorting]
+      paging: OffsetPaging
+    ): SensorDataResponse!
   }
   type Mutation {
     login(loginInput: LoginInput): User!
