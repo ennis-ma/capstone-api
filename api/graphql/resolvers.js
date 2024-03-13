@@ -58,17 +58,15 @@ module.exports = {
     },
     sensorData: async (
       _,
-      { topic_id, filter = {}, sorting = [], paging = { offset: 0, limit: 10 } }
+      { topic_id = [], filter = {}, sorting = [], paging = {} }
     ) => {
       // Convert filter to Sequelize where clause
-
-      const where = topic_id ? { topic_id } : {};
-      if (
-        filter.topic_id &&
-        typeof filter.topic_id === "object" &&
-        filter.topic_id.in !== undefined
-      ) {
-        where.topic_id = { [Op.in]: filter.topic_id.in };
+      const where = {};
+      if (topic_id.length > 0) {
+        where.topic_id = { [Op.in]: topic_id };
+      }
+      if (filter.id && filter.id.in && Array.isArray(filter.id.in)) {
+        where.topic_id = { [Op.in]: filter.id.in };
       }
       if (
         filter.ts &&
@@ -102,8 +100,8 @@ module.exports = {
       const nodes = await SensorData.findAll({
         where,
         order,
-        offset: paging.offset,
-        limit: paging.limit,
+        offset: paging.offset || 0,
+        limit: paging.limit || undefined,
       });
 
       return {

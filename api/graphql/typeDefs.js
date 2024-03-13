@@ -70,9 +70,13 @@ module.exports = gql`
   }
 
   input SensorDataFilter {
-    topic_id: JSON
+    id: IDFilter
     ts: JSON
     value_string: JSON
+  }
+
+  input IDFilter {
+    in: [ID]
   }
 
   input SensorDataSorting {
@@ -81,8 +85,8 @@ module.exports = gql`
   }
 
   input OffsetPaging {
-    offset: Int!
-    limit: Int!
+    offset: Int
+    limit: Int
   }
 
   type Query {
@@ -96,7 +100,7 @@ module.exports = gql`
       paging: OffsetPaging
     ): SensorResponse!
     sensorData(
-      topic_id: ID
+      topic_id: [ID]
       filter: SensorDataFilter
       sorting: [SensorDataSorting]
       paging: OffsetPaging
